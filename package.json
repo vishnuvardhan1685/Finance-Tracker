@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node api/server.js",
     "dev": "nodemon api/server.js",
-    "seed": "node api/utils/seedData.js"
+    "seed": "node api/utils/seedData.js",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "deploy:check": "./pre-deploy-check.sh",
+    "install:all": "npm install && cd frontend && npm install && cd .."
   },
   "keywords": [],
   "author": "",
