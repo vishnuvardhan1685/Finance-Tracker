@@ -5,27 +5,30 @@ import axiosInstance from '@/lib/axios';
 import Dialog from '@/components/ui/Dialog';
 import DebtForm from '@/components/debts/DebtsForm';
 import { Button } from '@/components/ui/Button';
+import useAuthStore from '@/stores/authStore';
 
 const DebtsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDebt, setEditingDebt] = useState(null);
   const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.user?._id);
 
   // Fetch all debts
   const { data: debts = [], isLoading } = useQuery({
-    queryKey: ['debts'],
+    queryKey: ['debts', userId],
     queryFn: async () => {
       const { data } = await axiosInstance.get('/debt');
       return data.data;
     },
+    enabled: Boolean(userId),
   });
 
   // Create debt mutation
   const createDebtMutation = useMutation({
     mutationFn: (newDebt) => axiosInstance.post('/debt', newDebt),
     onSuccess: () => {
-      queryClient.invalidateQueries(['debts']);
-      queryClient.invalidateQueries(['debtSummary']);
+      queryClient.invalidateQueries({ queryKey: ['debts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['debtSummary', userId] });
       setIsDialogOpen(false);
       setEditingDebt(null);
     },
@@ -35,8 +38,8 @@ const DebtsPage = () => {
   const updateDebtMutation = useMutation({
     mutationFn: ({ id, data }) => axiosInstance.put(`/debt/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['debts']);
-      queryClient.invalidateQueries(['debtSummary']);
+      queryClient.invalidateQueries({ queryKey: ['debts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['debtSummary', userId] });
       setIsDialogOpen(false);
       setEditingDebt(null);
     },
@@ -46,8 +49,8 @@ const DebtsPage = () => {
   const deleteDebtMutation = useMutation({
     mutationFn: (id) => axiosInstance.delete(`/debt/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['debts']);
-      queryClient.invalidateQueries(['debtSummary']);
+      queryClient.invalidateQueries({ queryKey: ['debts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['debtSummary', userId] });
     },
   });
 

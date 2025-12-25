@@ -3,6 +3,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Toolti
 import useExpenseStore from '@/stores/expenseStore';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@/lib/axios';
+import useAuthStore from '@/stores/authStore';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -15,6 +16,8 @@ const StatsPage = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(null);
+
+  const userId = useAuthStore((state) => state.user?._id);
   
   const fetchTransactions = useExpenseStore(state => state.fetchTransactions);
   const getMonthlySummary = useExpenseStore(state => state.getMonthlySummary);
@@ -37,11 +40,12 @@ const StatsPage = () => {
     isError: isDebtsError,
     error: debtsError,
   } = useQuery({
-    queryKey: ['debts'],
+    queryKey: ['debts', userId],
     queryFn: async () => {
       const { data } = await axiosInstance.get('/debt');
       return data.data;
     },
+    enabled: Boolean(userId),
   });
 
   // Build a contiguous list of years based on actual debts (fallback: current year)

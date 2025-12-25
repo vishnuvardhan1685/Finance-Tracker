@@ -36,6 +36,8 @@ const useExpenseStore = create((set, get) => ({
   transactions: [],
   isLoading: false,
   error: null,
+
+  clearTransactions: () => set({ transactions: [], isLoading: false, error: null }),
   
   // Fetch transactions from backend
   fetchTransactions: async (year, month) => {

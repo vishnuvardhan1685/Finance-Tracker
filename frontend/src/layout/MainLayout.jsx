@@ -2,11 +2,15 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, BarChart3, Wallet, LogOut, CreditCard } from "lucide-react";
 import useAuthStore from "@/stores/authStore";
 import { Button } from "@/components/ui/Button";
+import { useQueryClient } from "@tanstack/react-query";
+import useExpenseStore from "@/stores/expenseStore";
 
 const MainLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
+    const queryClient = useQueryClient();
+    const clearTransactions = useExpenseStore((state) => state.clearTransactions);
     
     const isActive = (path) => {
         return location.pathname === path;
@@ -14,6 +18,11 @@ const MainLayout = () => {
     
     const handleLogout = async () => {
         await logout();
+
+        // Prevent any cached, user-specific data from flashing for the next login
+        queryClient.clear();
+        clearTransactions();
+
         navigate('/login');
     };
     
