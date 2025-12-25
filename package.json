@@ -1,7 +1,7 @@
 {
   "name": "finance-tracker",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api/server.js",
   "type": "module",
   "scripts": {
     "start": "node api/server.js",
@@ -15,6 +15,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "axios": "^1.11.0",
