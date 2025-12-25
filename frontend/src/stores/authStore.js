@@ -1,12 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
-
-// Backend default port is 5001 (see root `.env` PORT)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-
-// Configure axios to send cookies
-axios.defaults.withCredentials = true;
+import axios from '@/lib/axios';
 
 const useAuthStore = create(
   persist(
@@ -19,7 +13,7 @@ const useAuthStore = create(
       checkAuth: async () => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axios.get(`${API_URL}/user/profile`);
+          const response = await axios.get(`/user/profile`);
           set({ user: response.data.user, isLoading: false });
           return { success: true };
         } catch {
@@ -32,7 +26,7 @@ const useAuthStore = create(
       signup: async (name, email, password) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axios.post(`${API_URL}/auth/signup`, {
+          const response = await axios.post(`/auth/signup`, {
             name,
             email,
             password,
@@ -50,7 +44,7 @@ const useAuthStore = create(
       login: async (email, password) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axios.post(`${API_URL}/auth/login`, {
+          const response = await axios.post(`/auth/login`, {
             email,
             password,
           });
@@ -69,7 +63,7 @@ const useAuthStore = create(
       // Logout
       logout: async () => {
         try {
-          await axios.post(`${API_URL}/auth/logout`);
+          await axios.post(`/auth/logout`);
           set({ user: null, error: null });
           return { success: true };
         } catch {

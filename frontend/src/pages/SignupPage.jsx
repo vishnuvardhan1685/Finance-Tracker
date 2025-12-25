@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Wallet, User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Wallet, User, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import useAuthStore from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
