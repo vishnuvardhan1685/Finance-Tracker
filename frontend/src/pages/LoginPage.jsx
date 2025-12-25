@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Wallet, Mail, Lock, AlertCircle } from 'lucide-react';
 import useAuthStore from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -46,7 +46,7 @@ const LoginPage = () => {
                 {/* Header */}
                 <div className="text-center">
                     <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
-                        <LogIn className="w-8 h-8 text-white" />
+                        <Wallet className="w-8 h-8 text-white" />
                     </div>
                     <h2 className="text-3xl font-bold text-[color:var(--ft-text)]">Welcome Back</h2>
                     <p className="mt-2 text-[color:var(--ft-muted)]">Sign in to your Finance Tracker account</p>

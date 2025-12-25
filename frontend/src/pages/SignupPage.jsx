@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { UserPlus, User, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Wallet, User, Mail, Lock, AlertCircle } from 'lucide-react';
 import useAuthStore from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -47,7 +47,7 @@ const SignupPage = () => {
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl">
-            <UserPlus className="w-8 h-8 text-white" />
+            <Wallet className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-[color:var(--ft-text)]">Create Account</h2>
           <p className="mt-2 text-[color:var(--ft-muted)]">Start tracking your finances today</p>
