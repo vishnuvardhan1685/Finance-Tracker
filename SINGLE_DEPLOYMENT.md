@@ -58,7 +58,7 @@ Since you already have `finance-tracker-qebo` deployed, we'll update it:
 
    **Update Build Command:**
    ```
-   npm install && cd frontend && npm install --include=dev && npm run build && cd ..
+   npm install && cd frontend && npm install && npm run build && cd ..
    ```
 
    **Keep Start Command:**

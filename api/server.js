@@ -58,7 +58,9 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(frontendDistPath));
     
     // Handle React Router - send all non-API requests to index.html
-    app.get('*', (req, res) => {
+    // NOTE: Express 5 + path-to-regexp no longer supports a bare "*" route.
+    // Use a regex instead and explicitly exclude API routes.
+    app.get(/^(?!\/api).*$/, (req, res) => {
         res.sendFile(path.join(frontendDistPath, 'index.html'));
     });
 } else {
