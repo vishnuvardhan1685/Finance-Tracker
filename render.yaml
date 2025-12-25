@@ -1,11 +1,11 @@
 services:
-  # Backend API Service
+  # Combined Backend + Frontend Service
   - type: web
-    name: finance-tracker-api
+    name: finance-tracker
     env: node
     region: oregon
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && cd frontend && npm install && npm run build && cd ..
     startCommand: node api/server.js
     envVars:
       - key: NODE_ENV
@@ -16,22 +16,4 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: FRONTEND_URL
-        sync: false
     healthCheckPath: /api/health
-
-  # Frontend Static Site
-  - type: web
-    name: finance-tracker-frontend
-    env: static
-    region: oregon
-    plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
