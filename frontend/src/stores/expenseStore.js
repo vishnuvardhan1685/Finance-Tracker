@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import axiosInstance from '@/lib/axios';
 
+const dedupeById = (items) => {
+  const map = new Map();
+  for (const item of items || []) {
+    if (!item) continue;
+    const key = item.id;
+    if (!key) continue;
+    map.set(key, item);
+  }
+  return Array.from(map.values());
+};
+
 // Categories for expenses
 export const EXPENSE_CATEGORIES = [
   'Food',
@@ -47,8 +58,8 @@ const useExpenseStore = create((set, get) => ({
         paidTo: typeof exp.paidTo === 'string' ? exp.paidTo : '',
         createdAt: exp.createdAt
       }));
-      
-      set({ transactions, isLoading: false });
+
+      set({ transactions: dedupeById(transactions), isLoading: false });
     } catch (error) {
       console.error('Error fetching transactions:', error);
       set({ error: error.response?.data?.message || 'Failed to fetch transactions', isLoading: false });
@@ -87,8 +98,8 @@ const useExpenseStore = create((set, get) => ({
         paidTo: typeof transaction.paidTo === 'string' ? transaction.paidTo : '',
         createdAt: response.data.data.createdAt
       };
-      
-      set({ transactions: [...get().transactions, newTransaction], isLoading: false });
+
+      set({ transactions: dedupeById([...get().transactions, newTransaction]), isLoading: false });
       return { success: true };
     } catch (error) {
       console.error('Error adding transaction:', error);

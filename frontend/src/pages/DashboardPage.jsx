@@ -88,15 +88,11 @@ const DashboardPage = () => {
     }
     setIsDialogOpen(false);
     setEditingTransaction(null);
-    // Refresh transactions
-    fetchTransactions();
   };
   
   const handleDeleteTransaction = async (id) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       await deleteTransaction(id);
-      // Refresh transactions
-      fetchTransactions();
     }
   };
   
