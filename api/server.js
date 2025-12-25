@@ -58,6 +58,25 @@ app.use("/api/user",userRoutes)
 app.use("/api/expense",expenseRoutes)
 app.use("/api/debt",debtRoutes)
 
+// Root endpoint - API information
+app.get('/', (req, res) => {
+    res.json({ 
+        name: 'Finance Tracker API',
+        version: '1.0.0',
+        status: 'running',
+        message: 'Welcome to Finance Tracker API',
+        endpoints: {
+            health: '/api/health',
+            auth: '/api/auth',
+            user: '/api/user',
+            expenses: '/api/expense',
+            debts: '/api/debt'
+        },
+        docs: 'This is a REST API backend. Deploy the frontend separately to use the application.',
+        frontend: process.env.FRONTEND_URL || 'Not configured'
+    });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
