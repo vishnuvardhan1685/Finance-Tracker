@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Finance Tracker "pure black" theme tokens */
+  --ft-bg: #000000;            /* pure black background */
+  --ft-surface: #0a0a0a;       /* cards, panels - very dark gray */
+  --ft-surface-2: #141414;     /* elevated surfaces */
+  --ft-border: rgba(255, 255, 255, 0.08);
+  --ft-text: #ffffff;
+  --ft-muted: rgba(255, 255, 255, 0.7);
+  --ft-muted-2: rgba(255, 255, 255, 0.5);
+  --ft-accent: #ffffff;        /* white accent instead of blue */
+  --ft-accent-2: #cccccc;      /* light gray */
+  --ft-danger: #ef4444;
+  --ft-ring: rgba(255, 255, 255, 0.3);
+
+  /* shadows */
+  --ft-shadow: 0 18px 60px rgba(0, 0, 0, 0.95);
+}
+
+.ft-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  background-color: var(--ft-surface);
+  border: 1px solid var(--ft-border);
+  box-shadow: var(--ft-shadow);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--ft-bg);
+  color: var(--ft-text);
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Input focus styles */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ft-ring);
+}
