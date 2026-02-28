@@ -11,6 +11,10 @@ export const createExpenseValidation = [
     .notEmpty()
     .withMessage('Title is required')
     .trim(),
+  check('type')
+    .optional()
+    .isIn(['expense', 'income'])
+    .withMessage('Type must be expense or income'),
   check('amount')
     .isFloat({ min: 0 })
     .withMessage('Amount must be a positive number'),
@@ -47,6 +51,10 @@ export const updateExpenseValidation = [
     .notEmpty()
     .withMessage('Title cannot be empty')
     .trim(),
+  check('type')
+    .optional()
+    .isIn(['expense', 'income'])
+    .withMessage('Type must be expense or income'),
   check('amount')
     .optional()
     .isFloat({ min: 0 })
@@ -86,11 +94,12 @@ export const getExpenseSummaryValidation = [
 // Get all expenses for the authenticated user
 export const getExpenses = async (req, res) => {
   try {
-    const { year, month } = req.query;
+    const { year, month, type } = req.query;
     const query = { userId: req.user.id };
 
     if (year) query.year = parseInt(year);
     if (month) query.month = month;
+    if (type && ['expense', 'income'].includes(type)) query.type = type;
 
     const expenses = await Expense.find(query).sort({ date: -1 });
 
@@ -119,7 +128,7 @@ export const createExpense = async (req, res) => {
   }
 
   try {
-    const { category, title, amount, paymentMethod, paidTo, date, month, year } = req.body;
+  const { category, title, amount, paymentMethod, paidTo, date, month, year, type } = req.body;
 
     // Validate date matches month and year
     const expenseDate = new Date(date);
@@ -135,6 +144,7 @@ export const createExpense = async (req, res) => {
       userId: req.user.id,
       category,
       title,
+      type: type === 'income' ? 'income' : 'expense',
       paidTo: typeof paidTo === 'string' ? paidTo.trim() : '',
       amount,
       paymentMethod: paymentMethod || 'Cash',
@@ -181,7 +191,7 @@ export const updateExpense = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { category, title, amount, paymentMethod, paidTo, date, month, year } = req.body;
+  const { category, title, amount, paymentMethod, paidTo, date, month, year, type } = req.body;
 
     // Validate date matches month and year if provided
     if (date && month && year) {
@@ -198,6 +208,7 @@ export const updateExpense = async (req, res) => {
     const updateData = {};
   if (category) updateData.category = category;
     if (title) updateData.title = title;
+    if (type) updateData.type = type;
     if (amount) updateData.amount = amount;
   if (paymentMethod) updateData.paymentMethod = paymentMethod;
   if (paidTo !== undefined) updateData.paidTo = typeof paidTo === 'string' ? paidTo.trim() : '';
@@ -275,12 +286,12 @@ export const getExpenseSummary = async (req, res) => {
 
     if (year) query.year = parseInt(year);
 
-    // Monthly summary
+    // Monthly summary (split by type)
     const monthlySummary = await Expense.aggregate([
       { $match: query },
       {
         $group: {
-          _id: { year: '$year', month: '$month' },
+          _id: { year: '$year', month: '$month', type: '$type' },
           total: { $sum: '$amount' },
           count: { $sum: 1 },
         },
@@ -292,6 +303,7 @@ export const getExpenseSummary = async (req, res) => {
         $project: {
           year: '$_id.year',
           month: '$_id.month',
+          type: '$_id.type',
           total: 1,
           count: 1,
           _id: 0,
@@ -299,34 +311,56 @@ export const getExpenseSummary = async (req, res) => {
       },
     ]);
 
-    // Yearly summary
+    // Yearly summary (split by type)
     const yearlySummary = await Expense.aggregate([
       { $match: query },
       {
         $group: {
-          _id: '$year',
+          _id: { year: '$year', type: '$type' },
           total: { $sum: '$amount' },
           count: { $sum: 1 },
         },
       },
       {
-        $sort: { _id: -1 },
+        $sort: { '_id.year': -1 },
       },
       {
         $project: {
-          year: '$_id',
+          year: '$_id.year',
+          type: '$_id.type',
           total: 1,
           count: 1,
           _id: 0,
         },
       },
     ]);
+
+    const totalsAgg = await Expense.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$type',
+          total: { $sum: '$amount' },
+        },
+      },
+    ]);
+
+    const totals = totalsAgg.reduce(
+      (acc, row) => {
+        const key = row._id === 'income' ? 'totalIncome' : 'totalExpenses';
+        acc[key] = row.total || 0;
+        acc.netBalance = acc.totalIncome - acc.totalExpenses;
+        return acc;
+      },
+      { totalIncome: 0, totalExpenses: 0, netBalance: 0 }
+    );
 
     res.status(200).json({
       success: true,
       data: {
         monthly: monthlySummary,
         yearly: yearlySummary,
+        totals,
       },
     });
   } catch (error) {

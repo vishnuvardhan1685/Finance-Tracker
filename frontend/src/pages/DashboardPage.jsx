@@ -18,6 +18,7 @@ const DashboardPage = () => {
   const updateTransaction = useExpenseStore(state => state.updateTransaction);
   const deleteTransaction = useExpenseStore(state => state.deleteTransaction);
   const fetchTransactions = useExpenseStore(state => state.fetchTransactions);
+  const fetchCategories = useExpenseStore(state => state.fetchCategories);
   const getStats = useExpenseStore(state => state.getStats);
   const isLoading = useExpenseStore(state => state.isLoading);
   
@@ -25,8 +26,9 @@ const DashboardPage = () => {
   useEffect(() => {
     if (user) {
       fetchTransactions();
+      fetchCategories();
     }
-  }, [user, fetchTransactions]);
+  }, [user, fetchTransactions, fetchCategories]);
   
   const yearOptions = useMemo(() => {
     const allYears = (transactions || [])
@@ -55,7 +57,14 @@ const DashboardPage = () => {
     average: 0,
     earliestDate: null,
     latestDate: null,
+    totalIncome: 0,
+    totalExpenses: 0,
+    netBalance: 0,
+    countIncome: 0,
+    countExpenses: 0,
   };
+
+  const totalCount = (stats.countIncome || 0) + (stats.countExpenses || 0);
 
   // Keep selectedYear valid even when new years appear after adding data
   useEffect(() => {
@@ -119,47 +128,47 @@ const DashboardPage = () => {
         <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-white/10 to-white/5 rounded-xl hover:border-white/20 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2 rounded-lg md:p-3 bg-white/10">
-              <Calendar className="w-5 h-5 text-white md:w-6 md:h-6" />
+              <IndianRupee className="w-5 h-5 text-white md:w-6 md:h-6" />
             </div>
           </div>
-          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Earliest Date</p>
+          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Total Expenses</p>
           <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">
-            {stats.earliestDate ? new Date(stats.earliestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
+            ₹{Number(stats.totalExpenses || 0).toFixed(2)}
           </p>
         </div>
-        
+
+        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-xl hover:border-emerald-500/30 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg md:p-3 bg-emerald-500/20">
+              <DollarSign className="w-5 h-5 text-emerald-200 md:w-6 md:h-6" />
+            </div>
+          </div>
+          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Total Income</p>
+          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">
+            ₹{Number(stats.totalIncome || 0).toFixed(2)}
+          </p>
+        </div>
+
+        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 rounded-xl hover:border-indigo-500/30 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg md:p-3 bg-indigo-500/20">
+              <Receipt className="w-5 h-5 text-indigo-200 md:w-6 md:h-6" />
+            </div>
+          </div>
+          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Net Balance</p>
+          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">
+            ₹{Number(stats.netBalance || 0).toFixed(2)}
+          </p>
+        </div>
+
         <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-white/10 to-white/5 rounded-xl hover:border-white/20 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2 rounded-lg md:p-3 bg-white/10">
               <Calendar className="w-5 h-5 text-white md:w-6 md:h-6" />
-            </div>
-          </div>
-          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Latest Date</p>
-          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">
-            {stats.latestDate ? new Date(stats.latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
-          </p>
-        </div>
-        
-        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-white/10 to-white/5 rounded-xl hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg md:p-3 bg-white/10">
-              <Receipt className="w-5 h-5 text-white md:w-6 md:h-6" />
             </div>
           </div>
           <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Total Transactions</p>
-          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">{stats.count}</p>
-        </div>
-        
-        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-xl hover:border-red-500/30 transition-all">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg md:p-3 bg-red-500/20">
-              <IndianRupee className="w-5 h-5 text-red-400 md:w-6 md:h-6" />
-            </div>
-          </div>
-          <p className="text-xs font-medium text-[color:var(--ft-muted)] uppercase tracking-wider mb-1">Total Spent</p>
-          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">
-            ₹{stats.total.toFixed(2)}
-          </p>
+          <p className="text-lg md:text-xl font-bold text-[color:var(--ft-text)]">{totalCount}</p>
         </div>
       </div>
       

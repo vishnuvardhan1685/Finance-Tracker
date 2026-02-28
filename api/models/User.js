@@ -17,6 +17,24 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: 6,
   },
+  currency: {
+    type: String,
+    default: 'INR',
+    trim: true,
+  },
+  avatar: {
+    type: String,
+    default: null,
+    trim: true,
+  },
+  preferences: {
+    type: Object,
+    default: {},
+  },
+  onboardingDone: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {

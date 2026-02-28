@@ -95,7 +95,12 @@ const StatsPage = () => {
   }, [debtAggregates, selectedYear]);
 
   const debtMonthlyData = useMemo(() => {
-    const base = monthlyData.map((m) => ({ month: m.month, total: m.total, debtTotal: 0 }));
+    const base = monthlyData.map((m) => ({
+      month: m.month,
+      expenseTotal: m.expenseTotal,
+      incomeTotal: m.incomeTotal,
+      debtTotal: 0,
+    }));
     const agg = debtAggregates.get(selectedYear);
     if (!agg) return base;
     return base.map((row) => ({
@@ -145,25 +150,27 @@ const StatsPage = () => {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
         <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-white/10 to-white/5 rounded-xl hover:border-white/20 transition-all">
           <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Expenses (total)</p>
-          <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">₹{Number(stats.total || 0).toFixed(2)}</p>
-          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">{stats.count} transactions</p>
+          <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">₹{Number(stats.totalExpenses || 0).toFixed(2)}</p>
+          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">{stats.countExpenses || 0} transactions</p>
         </div>
         <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-white/10 to-white/5 rounded-xl hover:border-white/20 transition-all">
-          <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Expenses (avg)</p>
-          <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">₹{Number(stats.average || 0).toFixed(2)}</p>
-          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">per transaction</p>
+          <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Income (total)</p>
+          <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">₹{Number(stats.totalIncome || 0).toFixed(2)}</p>
+          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">{stats.countIncome || 0} transactions</p>
+        </div>
+        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-xl hover:border-red-500/30 transition-all">
+          <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Net Balance</p>
+          <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">
+            ₹{Number(stats.netBalance || 0).toFixed(2)}
+          </p>
+          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">Income − Expenses</p>
         </div>
         <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-xl hover:border-red-500/30 transition-all">
           <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Debts (total)</p>
           <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">
             {isDebtsLoading ? '…' : `₹${Number(debtYear.total || 0).toFixed(2)}`}
           </p>
-            <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">{isDebtsLoading ? 'loading' : `${debtYear.count || 0} records`}</p>
-        </div>
-        <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-gradient-to-br from-red-500/20 to-red-600/10 rounded-xl hover:border-red-500/30 transition-all">
-          <p className="text-xs md:text-sm text-[color:var(--ft-muted)] uppercase tracking-wider">Debts (count)</p>
-            <p className="mt-2 text-2xl md:text-3xl font-bold text-[color:var(--ft-text)]">{isDebtsLoading ? '…' : (debtYear.count || 0)}</p>
-          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">for {selectedYear}</p>
+          <p className="mt-1 text-xs text-[color:var(--ft-muted-2)]">{isDebtsLoading ? 'loading' : `${debtYear.count || 0} records`}</p>
         </div>
       </div>
       {isDebtsError && (
@@ -177,7 +184,7 @@ const StatsPage = () => {
       
       {/* Monthly Summary Bar Chart */}
       <div className="p-4 md:p-6 border border-[color:var(--ft-border)] bg-[color:var(--ft-surface)] rounded-xl">
-        <h2 className="mb-4 md:mb-6 text-lg md:text-xl font-semibold text-[color:var(--ft-text)]">Monthly Summary (Expenses vs Debts)</h2>
+        <h2 className="mb-4 md:mb-6 text-lg md:text-xl font-semibold text-[color:var(--ft-text)]">Monthly Summary (Income vs Expenses vs Debts)</h2>
         <div className="w-full" style={{ minHeight: '320px', height: '400px' }}>
           <ResponsiveContainer width="100%" height="100%" minHeight={320}>
             <BarChart data={debtMonthlyData} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
@@ -201,7 +208,8 @@ const StatsPage = () => {
                 formatter={(value) => `₹${value.toFixed(2)}`}
               />
               <Legend wrapperStyle={{ color: 'rgba(255, 255, 255, 0.7)' }} />
-              <Bar dataKey="total" fill="#ffffff" name="Total Expenses" />
+              <Bar dataKey="expenseTotal" fill="#ffffff" name="Total Expenses" />
+              <Bar dataKey="incomeTotal" fill="#22c55e" name="Total Income" />
               <Bar dataKey="debtTotal" fill="#ef4444" name="Total Debts" />
             </BarChart>
           </ResponsiveContainer>
@@ -260,7 +268,7 @@ const StatsPage = () => {
               categoryData
                 .sort((a, b) => b.value - a.value)
                 .map((category, index) => {
-                  const percentage = stats.total > 0 ? (category.value / stats.total * 100).toFixed(1) : '0.0';
+                  const percentage = stats.totalExpenses > 0 ? (category.value / stats.totalExpenses * 100).toFixed(1) : '0.0';
                   return (
                     <div key={category.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

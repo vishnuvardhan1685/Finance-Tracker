@@ -1,21 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '@/stores/expenseStore';
+import useExpenseStore, { PAYMENT_METHODS } from '@/stores/expenseStore';
 
 const TransactionForm = ({ initialData, onSave, onCancel }) => {
   const todayStr = new Date().toISOString().split('T')[0];
+
+  const categories = useExpenseStore((state) => state.categories);
+  const fetchCategories = useExpenseStore((state) => state.fetchCategories);
+  const isCategoriesLoading = useExpenseStore((state) => state.isCategoriesLoading);
 
   const [dateError, setDateError] = useState('');
 
   const [formData, setFormData] = useState({
     date: todayStr,
-    category: EXPENSE_CATEGORIES[0],
+    category: '',
     description: '',
     amount: '',
+    type: 'expense',
     paymentMethod: PAYMENT_METHODS[0],
     paidTo: ''
   });
+
+  const filteredCategories = categories.filter((cat) => {
+    const catType = cat.categoryType || 'expense';
+    if (formData.type === 'income') {
+      return ['income', 'both'].includes(catType);
+    }
+    return ['expense', 'both'].includes(catType);
+  });
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+  }, [categories.length, fetchCategories]);
   
   useEffect(() => {
     if (initialData) {
@@ -23,14 +42,22 @@ const TransactionForm = ({ initialData, onSave, onCancel }) => {
       setFormData({
         // If somehow an old record has a future date, clamp it to today to keep the form valid
         date: initialDateStr > todayStr ? todayStr : initialDateStr,
-        category: initialData.category || EXPENSE_CATEGORIES[0],
+        category: initialData.category || categories[0]?.name || '',
         description: initialData.description || '',
         amount: initialData.amount?.toString() || '',
+        type: initialData.type || 'expense',
         paymentMethod: initialData.paymentMethod || PAYMENT_METHODS[0],
         paidTo: initialData.paidTo || ''
       });
     }
-  }, [initialData, todayStr]);
+  }, [initialData, todayStr, categories]);
+
+  useEffect(() => {
+    if (filteredCategories.length === 0) return;
+    if (!formData.category || !filteredCategories.some((cat) => cat.name === formData.category)) {
+      setFormData((prev) => ({ ...prev, category: filteredCategories[0].name }));
+    }
+  }, [filteredCategories, initialData, formData.category]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,6 +95,35 @@ const TransactionForm = ({ initialData, onSave, onCancel }) => {
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <label className="block mb-1 text-sm font-medium text-gray-300">
+            Transaction Type <span className="text-red-400">*</span>
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, type: 'expense' }))}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                formData.type === 'expense'
+                  ? 'bg-white text-black border-white'
+                  : 'bg-gray-700 text-white border-gray-600 hover:border-gray-500'
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, type: 'income' }))}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                formData.type === 'income'
+                  ? 'bg-white text-black border-white'
+                  : 'bg-gray-700 text-white border-gray-600 hover:border-gray-500'
+              }`}
+            >
+              Income
+            </button>
+          </div>
+        </div>
+        <div className="col-span-2">
+          <label className="block mb-1 text-sm font-medium text-gray-300">
             Date of Payment <span className="text-red-400">*</span>
           </label>
           <Input
@@ -93,11 +149,16 @@ const TransactionForm = ({ initialData, onSave, onCancel }) => {
             value={formData.category}
             onChange={handleChange}
             required
+            disabled={isCategoriesLoading || filteredCategories.length === 0}
             className="w-full px-3 py-2 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {EXPENSE_CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
+            {filteredCategories.length === 0 ? (
+              <option value="">No categories available</option>
+            ) : (
+              filteredCategories.map((cat) => (
+                <option key={cat._id} value={cat.name}>{cat.name}</option>
+              ))
+            )}
           </select>
         </div>
         
@@ -120,14 +181,14 @@ const TransactionForm = ({ initialData, onSave, onCancel }) => {
         
         <div>
           <label className="block mb-1 text-sm font-medium text-gray-300">
-            Paid To
+            {formData.type === 'income' ? 'Income Source' : 'Paid To'}
           </label>
           <Input
             type="text"
             name="paidTo"
             value={formData.paidTo}
             onChange={handleChange}
-            placeholder="e.g., Local Supplier"
+            placeholder={formData.type === 'income' ? 'e.g., Salary, Client, Rental' : 'e.g., Local Supplier'}
             className="w-full"
           />
         </div>
