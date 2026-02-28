@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 // routes
 import authRoutes from './routes/authRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 import debtRoutes from './routes/debtRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -42,6 +43,7 @@ app.use(cookieParser());
 // API routes
 app.use("/api/auth",authRoutes)
 app.use("/api/user",userRoutes)
+app.use("/api/category",categoryRoutes)
 app.use("/api/expense",expenseRoutes)
 app.use("/api/debt",debtRoutes)
 
@@ -75,6 +77,7 @@ if (process.env.NODE_ENV === 'production') {
                 health: '/api/health',
                 auth: '/api/auth',
                 user: '/api/user',
+                categories: '/api/category',
                 expenses: '/api/expense',
                 debts: '/api/debt'
             },

@@ -12,32 +12,28 @@ const dedupeById = (items) => {
   return Array.from(map.values());
 };
 
-// Categories for expenses
-export const EXPENSE_CATEGORIES = [
-  'Food',
-  'Transportation',
-  'Entertainment',
-  'Utilities',
-  'Insurances',
-  'Mobile communication',
-  'Savings',
-  'Loan payment',
-  'Leisure',
-  'Travel',
-  'Clothes',
-  'Media subscription',
-  'Other Expenses'
-];
-
 // Payment methods
 export const PAYMENT_METHODS = ['Cash', 'Credit', 'Debit', 'Visa', 'Mobile Payment'];
 
 const useExpenseStore = create((set, get) => ({
   transactions: [],
+  categories: [],
   isLoading: false,
+  isCategoriesLoading: false,
   error: null,
 
   clearTransactions: () => set({ transactions: [], isLoading: false, error: null }),
+
+  fetchCategories: async () => {
+    try {
+      set({ isCategoriesLoading: true, error: null });
+      const response = await axiosInstance.get('/category');
+      set({ categories: response.data.data || [], isCategoriesLoading: false });
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      set({ error: error.response?.data?.message || 'Failed to fetch categories', isCategoriesLoading: false });
+    }
+  },
   
   // Fetch transactions from backend
   fetchTransactions: async (year, month) => {
@@ -56,6 +52,7 @@ const useExpenseStore = create((set, get) => ({
         category: exp.category,
         description: exp.title,
         amount: exp.amount,
+        type: exp.type || 'expense',
         paymentMethod: exp.paymentMethod || 'Cash',
         paidTo: typeof exp.paidTo === 'string' ? exp.paidTo : '',
         createdAt: exp.createdAt
@@ -84,6 +81,7 @@ const useExpenseStore = create((set, get) => ({
         category: transaction.category,
         title: transaction.description,
         amount: transaction.amount,
+        type: transaction.type || 'expense',
         paymentMethod: transaction.paymentMethod,
         paidTo: typeof transaction.paidTo === 'string' ? transaction.paidTo : '',
         date: transaction.date,
@@ -97,6 +95,7 @@ const useExpenseStore = create((set, get) => ({
       const newTransaction = {
         id: response.data.data._id,
         ...transaction,
+        type: transaction.type || response.data.data.type || 'expense',
         paidTo: typeof transaction.paidTo === 'string' ? transaction.paidTo : '',
         createdAt: response.data.data.createdAt
       };
@@ -126,6 +125,7 @@ const useExpenseStore = create((set, get) => ({
       const backendData = {};
       if (updates.category) backendData.category = updates.category;
       if (updates.description) backendData.title = updates.description;
+  if (updates.type) backendData.type = updates.type;
       if (updates.amount) backendData.amount = updates.amount;
       if (updates.paymentMethod) backendData.paymentMethod = updates.paymentMethod;
       if (updates.paidTo !== undefined) backendData.paidTo = updates.paidTo;
@@ -181,22 +181,31 @@ const useExpenseStore = create((set, get) => ({
         const date = new Date(t.date);
         return date.getFullYear() === year && date.getMonth() === index;
       });
-      
-      const total = monthTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-      
+
+      const incomeTotal = monthTransactions
+        .filter((t) => t.type === 'income')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      const expenseTotal = monthTransactions
+        .filter((t) => t.type !== 'income')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
       return {
         month,
-        total,
+        incomeTotal,
+        expenseTotal,
+        netTotal: incomeTotal - expenseTotal,
         count: monthTransactions.length
       };
     });
   },
   
   // Get category breakdown
-  getCategoryBreakdown: (year, month = null) => {
+  getCategoryBreakdown: (year, month = null, type = 'expense') => {
     let filteredTransactions = get().transactions.filter(t => {
       const date = new Date(t.date);
-      return date.getFullYear() === year;
+      if (date.getFullYear() !== year) return false;
+      if (type === 'income') return t.type === 'income';
+      return t.type !== 'income';
     });
     
     if (month !== null) {
@@ -230,19 +239,31 @@ const useExpenseStore = create((set, get) => ({
     const yearTransactions = get().transactions.filter(t => 
       new Date(t.date).getFullYear() === year
     );
-    
-    const total = yearTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-    const count = yearTransactions.length;
-    
-    // Get earliest and latest transaction dates for the year
+
+    const incomeTransactions = yearTransactions.filter((t) => t.type === 'income');
+    const expenseTransactions = yearTransactions.filter((t) => t.type !== 'income');
+
+    const totalIncome = incomeTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalExpenses = expenseTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const countIncome = incomeTransactions.length;
+    const countExpenses = expenseTransactions.length;
+    const netBalance = totalIncome - totalExpenses;
+
     const dates = yearTransactions.map(t => new Date(t.date));
     const earliestDate = dates.length > 0 ? new Date(Math.min(...dates)) : null;
     const latestDate = dates.length > 0 ? new Date(Math.max(...dates)) : null;
-    
+
     return {
-      total,
-      count,
-      average: count > 0 ? total / count : 0,
+      total: totalExpenses,
+      count: countExpenses,
+      average: countExpenses > 0 ? totalExpenses / countExpenses : 0,
+      totalIncome,
+      totalExpenses,
+      netBalance,
+      countIncome,
+      countExpenses,
+      averageIncome: countIncome > 0 ? totalIncome / countIncome : 0,
+      averageExpense: countExpenses > 0 ? totalExpenses / countExpenses : 0,
       earliestDate,
       latestDate
     };

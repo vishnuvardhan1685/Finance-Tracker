@@ -11,10 +11,25 @@ const expenseSchema = new mongoose.Schema({
     required: [true, 'Category is required'],
     trim: true,
   },
+  type: {
+    type: String,
+    enum: ['expense', 'income'],
+    default: 'expense',
+  },
+  source: {
+    type: String,
+    enum: ['manual', 'imported'],
+    default: 'manual',
+  },
   title: {
     type: String,
     required: [true, 'Title is required'],
     trim: true,
+  },
+  merchantRaw: {
+    type: String,
+    trim: true,
+    default: '',
   },
   paidTo: {
     type: String,
@@ -30,6 +45,23 @@ const expenseSchema = new mongoose.Schema({
     type: String,
     default: 'Cash',
     trim: true,
+  },
+  importHash: {
+    type: String,
+    trim: true,
+  },
+  tags: {
+    type: [String],
+    default: [],
+  },
+  isRecurring: {
+    type: Boolean,
+    default: false,
+  },
+  notes: {
+    type: String,
+    trim: true,
+    default: '',
   },
   date: {
     type: Date,
@@ -60,6 +92,11 @@ const expenseSchema = new mongoose.Schema({
     },
   },
 });
+
+expenseSchema.index({ userId: 1, year: 1 });
+expenseSchema.index({ userId: 1, month: 1, year: 1 });
+expenseSchema.index({ userId: 1, type: 1 });
+expenseSchema.index({ importHash: 1 }, { sparse: true });
 
 const Expense = mongoose.model('Expense', expenseSchema);
 export default Expense;
